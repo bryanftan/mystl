@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <utility>
 #include <vector>
 
 namespace mystl {
@@ -8,50 +9,70 @@ namespace mystl {
 template<typename T>
 class vector {
 private:
-    std::size_t _length {};
-    std::size_t _capacity {};
-    T* _buffer;
+    std::size_t length_ {};
+    std::size_t capacity_ {};
+    T* buffer_;
 
 public:
 
     explicit vector(const std::size_t capacity)
-            : _capacity(capacity)
-            , _buffer(static_cast<T*>(::operator new(sizeof(T) * capacity))) {}
+            : capacity_(capacity)
+            , buffer_(static_cast<T*>(::operator new(sizeof(T) * capacity))) {
 
-    ~vector() {
-        for (int i {_length}; i > 0; --i) {
-            _buffer[i].~T();
+    }
+
+    ~vector() noexcept {
+        for (int i {length_}; i > 0; --i) {
+            buffer_[i].~T();
         }
-        ::operator delete(_buffer);
+        ::operator delete(buffer_, std::nothrow);
     }
 
     // Copy Semantics
 
-    vector(const vector<T>& rhs)
-        : _capacity(rhs._capacity),
-        _length(0),
-        _buffer(static_cast<T*>(::operator new(sizeof(T) * rhs._capacity))) {
-        for (int i {0}; i < rhs._length; ++i) {
-            push_back(rhs._buffer[i]);
+    vector(const vector& rhs)
+        : capacity_(rhs.capacity_)
+        , length_(0)
+        , buffer_(static_cast<T*>(::operator new(sizeof(T) * rhs.capacity_))) {
+        for (int i {0}; i < rhs.length_; ++i) {
+            push_back(rhs.buffer_[i]);
         }
     }
 
-    vector<T>& operator=(const vector<T>& rhs) {
+    vector& operator=(const vector& rhs) {
         // copy and swap
+        vector temp(rhs);
+        temp.swap(*this);
         return *this;
     }
 
     // Move Semantics
 
-    vector(T&& rhs) {}
+    vector(vector&& rhs) noexcept
+        : capacity_(0)
+        , length_(0)
+        , buffer_(nullptr) {
+        rhs.swap(*this);
+    }
 
-    vector operator=(T&& rhs) {}
+    vector& operator=(vector&& rhs) noexcept {
+        rhs.swap(*this);
+        return *this;
+    }
 
     // Member functions
 
     void push_back(const T& val) {
-        new (_buffer + _length) T(val);
-        ++_length;
+        new (buffer_ + length_) T(val);
+        ++length_;
+    }
+
+private:
+    void swap(vector<T>& rhs) noexcept {
+        using std::swap;
+        swap(capacity_, rhs.capacity_);
+        swap(length_, rhs.length_);
+        swap(buffer_, rhs.buffer_);
     }
 
 };
