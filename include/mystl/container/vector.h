@@ -21,12 +21,12 @@ private:
 
 public:
 
-    explicit vector(const size_t capacity = 10)
+    explicit vector(size_t capacity = 10)
             : capacity_(capacity)
             , buffer_(static_cast<T*>(::operator new(sizeof(T) * capacity))) {}
 
     ~vector() {
-        for (int i {length_}; i > 0; --i) {
+        for (size_t i {length_}; i > 0; --i) {
             buffer_[i].~T();
         }
         ::operator delete(buffer_);
@@ -39,11 +39,11 @@ public:
         , length_(0)
         , buffer_(static_cast<T*>(::operator new(sizeof(T) * rhs.capacity_))) {
         try {
-            for (int i {0}; i < rhs.length_; ++i) {
+            for (size_t i {0}; i < rhs.length_; ++i) {
                 push_back(rhs.buffer_[i]);
             }
         } catch(...) {
-            for (int i {length_}; i > 0; --i) {
+            for (size_t i {length_}; i > 0; --i) {
                 buffer_[i].~T();
             }
             throw;
@@ -91,13 +91,13 @@ private:
             const size_t newCapacity = 2.0 * capacity_;
             // copy and swap
             vector<T> temp(newCapacity);
-            moveOrCopy<T>(temp);
+            moveOrCopyAll<T>(temp);
 
         }
     }
 
     template <NoThrowMoveConstructible U>
-    void moveOrCopy(vector& dest) {
+    void moveOrCopyAll(vector& dest) {
         // do a move when resizing
         std::for_each(buffer_, buffer_ + length_, [&dest](T &item) {
             dest.moveBackInternal(std::move(item));
@@ -105,7 +105,7 @@ private:
     }
 
     template <typename U>
-    void moveOrCopy(vector& dest) {
+    void moveOrCopyAll(vector& dest) {
         // do a copy when resizing
         std::for_each(buffer_, buffer_ + length_, [&dest](T &item) {
             dest.pushBackInternal(item);

@@ -1,5 +1,7 @@
+#include <gtest/gtest.h>
+#include "mystl/container/vector.h"
 
-
-int main() {
-
+TEST(VectorTests, Test_PushBack) {
+    mystl::vector<int> v{};
+    v.push_back(1);
 }
