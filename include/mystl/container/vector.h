@@ -71,7 +71,13 @@ public:
         return *this;
     }
 
-    // Member functions
+    // Mutating functions
+
+    template <typename... Args>
+    void emplace_back(Args&&... args) {
+        resizeIfRequired();
+        emplaceBackInternal(std::forward<Args>(args)...);
+    }
 
     void push_back(const T& val) {
         resizeIfRequired();
@@ -84,6 +90,11 @@ public:
         swap(length_, rhs.length_);
         swap(buffer_, rhs.buffer_);
     }
+
+    // Non-mutating functions
+
+    size_t size() const { return length_; }
+    bool empty() const { return length_ == 0; }
 
 private:
     void resizeIfRequired() {
@@ -119,6 +130,12 @@ private:
 
     void moveBackInternal(T&& val) {
         new (buffer_ + length_) T(std::move(val));
+        ++length_;
+    }
+
+    template<typename... Args>
+    void emplaceBackInternal(Args&&... args) {
+        new (buffer_ + length_) T(std::forward<Args>(args)...);
         ++length_;
     }
 
