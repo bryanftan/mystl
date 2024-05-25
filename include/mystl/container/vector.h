@@ -97,11 +97,22 @@ public:
         moveBackInternal(std::move(val));
     }
 
+    void pop_back() {
+        --length_;
+        buffer_[length_].~T();
+    }
+
     void swap(vector& rhs) noexcept {
         using std::swap;
         swap(capacity_, rhs.capacity_);
         swap(length_, rhs.length_);
         swap(buffer_, rhs.buffer_);
+    }
+
+    // Element access
+
+    reference operator[](size_type idx) {
+        return buffer_[idx];
     }
 
     // Non-mutating functions
