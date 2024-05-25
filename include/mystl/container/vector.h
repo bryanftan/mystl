@@ -14,19 +14,27 @@ template<typename T>
 class vector {
     static_assert(!std::is_same_v<bool, T>, "vector<bool> is not supported");
 
+public:
+    using value_type = T;
+    using reference = T&;
+    using const_reference = const T&;
+    using pointer = T*;
+    using const_pointer = const T*;
+    using size_type = size_t;
+
 private:
-    size_t length_ {};
-    size_t capacity_ {};
-    T* buffer_;
+    size_type length_ {};
+    size_type capacity_ {};
+    pointer buffer_;
 
 public:
 
-    explicit vector(size_t capacity = 10)
+    explicit vector(size_type capacity = 10)
             : capacity_(capacity)
-            , buffer_(static_cast<T*>(::operator new(sizeof(T) * capacity))) {}
+            , buffer_(static_cast<pointer>(::operator new(sizeof(value_type) * capacity))) {}
 
     ~vector() {
-        for (size_t i {length_}; i > 0; --i) {
+        for (size_type i {length_}; i > 0; --i) {
             buffer_[i].~T();
         }
         ::operator delete(buffer_);
@@ -37,13 +45,13 @@ public:
     vector(const vector& rhs)
         : capacity_(rhs.capacity_)
         , length_(0)
-        , buffer_(static_cast<T*>(::operator new(sizeof(T) * rhs.capacity_))) {
+        , buffer_(static_cast<pointer>(::operator new(sizeof(value_type) * rhs.capacity_))) {
         try {
-            for (size_t i {0}; i < rhs.length_; ++i) {
+            for (size_type i {0}; i < rhs.length_; ++i) {
                 push_back(rhs.buffer_[i]);
             }
         } catch(...) {
-            for (size_t i {length_}; i > 0; --i) {
+            for (size_type i {length_}; i > 0; --i) {
                 buffer_[i].~T();
             }
             throw;
@@ -79,9 +87,14 @@ public:
         emplaceBackInternal(std::forward<Args>(args)...);
     }
 
-    void push_back(const T& val) {
+    void push_back(const_reference val) {
         resizeIfRequired();
         pushBackInternal(val);
+    }
+
+    void push_back(value_type&& val) {
+        resizeIfRequired();
+        moveBackInternal(std::move(val));
     }
 
     void swap(vector& rhs) noexcept {
@@ -93,24 +106,32 @@ public:
 
     // Non-mutating functions
 
-    size_t size() const { return length_; }
-    bool empty() const { return length_ == 0; }
+    size_type size() const noexcept {
+        return length_;
+    }
+
+    size_type capacity() const noexcept {
+        return capacity_;
+    }
+
+    bool empty() const noexcept {
+        return length_ == 0;
+    }
 
 private:
     void resizeIfRequired() {
         if (length_ == capacity_) {
-            const size_t newCapacity = 2.0 * capacity_;
+            const size_type newCapacity = 2.0 * capacity_;
             // copy and swap
-            vector<T> temp(newCapacity);
-            moveOrCopyAll<T>(temp);
-
+            vector<value_type> temp(newCapacity);
+            moveOrCopyAll<value_type>(temp);
         }
     }
 
     template <NoThrowMoveConstructible U>
     void moveOrCopyAll(vector& dest) {
         // do a move when resizing
-        std::for_each(buffer_, buffer_ + length_, [&dest](T &item) {
+        std::for_each(buffer_, buffer_ + length_, [&dest](reference item) {
             dest.moveBackInternal(std::move(item));
         });
     }
@@ -118,17 +139,17 @@ private:
     template <typename U>
     void moveOrCopyAll(vector& dest) {
         // do a copy when resizing
-        std::for_each(buffer_, buffer_ + length_, [&dest](T &item) {
+        std::for_each(buffer_, buffer_ + length_, [&dest](reference item) {
             dest.pushBackInternal(item);
         });
     }
 
-    void pushBackInternal(const T& val) {
+    void pushBackInternal(const_reference val) {
         new (buffer_ + length_) T(val);
         ++length_;
     }
 
-    void moveBackInternal(T&& val) {
+    void moveBackInternal(value_type && val) {
         new (buffer_ + length_) T(std::move(val));
         ++length_;
     }
