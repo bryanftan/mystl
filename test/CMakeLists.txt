@@ -9,6 +9,6 @@ FetchContent_MakeAvailable(googletest)
 add_executable(vector_test test_vector.cpp)
 
 target_link_libraries(vector_test
-        PRIVATE
+        PUBLIC
         GTest::gtest_main
         mystl::lib)

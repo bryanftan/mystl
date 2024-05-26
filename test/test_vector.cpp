@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "mystl/container/vector.h"
+#include "container/vector.h"
 
 TEST(VectorTests, PushBack) {
     mystl::vector<int> v{};
@@ -25,4 +25,11 @@ TEST(VectorTests, PushBackPopBack) {
     v.push_back(1);
     v.pop_back();
     EXPECT_TRUE(v.empty());
+}
+
+TEST(VectorTests, EmplaceBack) {
+    mystl::vector<std::pair<int, int>> v{};
+    v.emplace_back(1, 2);
+    EXPECT_EQ(v[0].first, 1);
+    EXPECT_EQ(v[0].second, 2);
 }
