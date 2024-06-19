@@ -8,7 +8,8 @@ template<typename T>
 class unique_ptr {
     T* data_;
 public:
-    explicit unique_ptr(T* data) : data_(data) {}
+    explicit unique_ptr(T* data)
+        : data_(data) {}
 
     ~unique_ptr() {
         delete data_;
