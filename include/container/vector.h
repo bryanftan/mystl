@@ -21,6 +21,10 @@ public:
     using pointer = T*;
     using const_pointer = const T*;
     using size_type = size_t;
+    using iterator = T*;
+    using const_iterator = const T*;
+    using riterator = std::reverse_iterator<iterator>;
+    using const_riterator = std::reverse_iterator<const_iterator>;
 
 private:
     size_type length_ {};
@@ -128,6 +132,17 @@ public:
     bool empty() const noexcept {
         return length_ == 0;
     }
+
+    // Iterators
+
+    iterator begin() { return buffer_; }
+    iterator end() { return buffer_ + length_; }
+    riterator rbegin() { riterator(end()); }
+    riterator rend() { riterator(begin()); }
+    const_iterator cbegin() const { return buffer_; }
+    const_iterator cend() const { return buffer_ + length_; }
+    const_riterator crbegin() const { const_riterator(end()); }
+    const_riterator crend() const { const_riterator(begin()); }
 
 private:
     void resizeIfRequired() {
